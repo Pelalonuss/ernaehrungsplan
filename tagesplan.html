@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tagesplan 3D – ALPEN · 80/20 · Eisenhower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#161d1b;
+  --ink-soft:#616b66;
+  --line:#dfe4e1;
+  --line-strong:#b9c1bc;
+  --paper:#ffffff;
+  --accent:#0f9d8c;
+  --accent-deep:#0a6e62;
+  --accent-soft:#e4f4f1;
+
+  /* Eisenhower – je Quadrant: Farbe / heller Grund / dunkle 3D-Seite */
+  --q1:#e5484d; --q1-bg:#fdecec; --q1-side:#a72a2e;
+  --q2:#0f9d8c; --q2-bg:#e4f4f1; --q2-side:#0a6e62;
+  --q3:#e0912a; --q3-bg:#fbf0d9; --q3-side:#a5661a;
+  --q4:#69737c; --q4-bg:#eef1f3; --q4-side:#454e56;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{
+  color:var(--ink);
+  font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1200px 600px at 15% -5%, #d7f0eb 0%, transparent 55%),
+    radial-gradient(1000px 700px at 100% 0%, #e7e3f7 0%, transparent 50%),
+    linear-gradient(180deg,#eef1ef 0%, #e4e8e5 100%);
+  min-height:100vh;
+}
+
+/* ============ Steuerleiste (nur Bildschirm) ============ */
+.bar{
+  max-width:210mm; margin:22px auto 0; padding:14px 18px;
+  display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  background:rgba(255,255,255,.6); backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.7); border-radius:16px;
+  box-shadow:0 10px 30px rgba(31,42,38,.10);
+}
+.bar p{ font-size:12.5px; color:#455049; max-width:60%; line-height:1.55; }
+.bar .btns{ display:flex; gap:10px; }
+.btn{
+  font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:14px;
+  color:#fff; border:none; border-radius:12px; padding:11px 20px; cursor:pointer; letter-spacing:.2px;
+  background:linear-gradient(180deg,#13b3a0,#0d8577);
+  box-shadow:0 6px 0 #0a6e62, 0 10px 18px rgba(10,110,98,.35);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #0a6e62, 0 6px 12px rgba(10,110,98,.3); }
+.btn.ghost{
+  background:#fff; color:var(--accent-deep);
+  box-shadow:0 5px 0 #cfe3df, 0 9px 16px rgba(31,42,38,.12);
+}
+.btn.ghost:active{ transform:translateY(4px); box-shadow:0 1px 0 #cfe3df; }
+
+/* ============ A4-Blatt ============ */
+.sheet{
+  width:210mm; min-height:297mm; background:var(--paper);
+  margin:18px auto 60px; padding:13mm 12mm 9mm;
+  border-radius:6px;
+  box-shadow:0 30px 70px rgba(20,30,26,.22), 0 2px 0 rgba(0,0,0,.03);
+  display:flex; flex-direction:column;
+}
+
+/* ============ Isometrischer Würfel (Helfer) ============ */
+.iso{
+  --s:36px; --c:var(--accent); --side:var(--accent-deep);
+  position:relative; width:var(--s); height:var(--s); flex:none;
+  border-radius:8px; color:#fff;
+  font-family:"Space Grotesk",sans-serif; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--c);
+  box-shadow:
+    4px 4px 0 var(--side), 8px 8px 0 var(--side),
+    9px 12px 18px rgba(20,30,26,.28);
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+
+/* ============ Kopf ============ */
+header{ display:flex; justify-content:space-between; align-items:center; gap:14px;
+  border-bottom:2.5px solid var(--ink); padding-bottom:12px; }
+.brand{ display:flex; align-items:center; gap:16px; }
+.brand .iso{ --s:44px; font-size:20px; }
+.title h1{ font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:25px; line-height:1; letter-spacing:-.5px; }
+.title .sub{ font-family:"Space Grotesk",sans-serif; font-weight:500; font-size:10.5px; color:var(--accent-deep);
+  margin-top:7px; letter-spacing:1.2px; text-transform:uppercase; }
+.headright{ display:flex; align-items:center; gap:16px; }
+.meta{ text-align:right; font-size:11.5px; color:var(--ink-soft); line-height:1.85; }
+.meta .name{ font-weight:700; color:var(--ink); font-size:13px; font-family:"Space Grotesk",sans-serif; }
+.meta input{ width:32mm; }
+
+/* Fortschritts-Ring */
+.ring{ position:relative; width:52px; height:52px; flex:none; }
+.ring svg{ transform:rotate(-90deg); }
+.ring .rtxt{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:12px; color:var(--accent-deep); }
+
+/* ============ Eingabefelder ============ */
+input[type=text], textarea{
+  font-family:inherit; font-size:12px; color:var(--ink);
+  border:none; border-bottom:1.5px solid var(--line-strong);
+  background:transparent; padding:3px 2px; outline:none;
+}
+input[type=text]:focus, textarea:focus{ border-bottom-color:var(--accent); background:var(--accent-soft); border-radius:4px 4px 0 0; }
+textarea{ resize:none; width:100%; border-bottom:1.5px solid var(--line); }
+.min-in{ width:13mm !important; text-align:center; }
+
+/* ============ Fokus-Box („Frosch zuerst") ============ */
+.focus{ margin-top:14px; position:relative;
+  background:linear-gradient(135deg,#0f9d8c 0%, #0a6e62 100%);
+  border-radius:16px; padding:14px 18px; color:#fff;
+  box-shadow:0 8px 0 #075045, 0 16px 30px rgba(10,110,98,.32);
+  -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.focus .lab{ font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:11px; text-transform:uppercase;
+  letter-spacing:.8px; display:flex; align-items:center; gap:8px; justify-content:space-between; color:#d3f3ee; }
+.focus .lab .l{ display:flex; align-items:center; gap:8px; }
+.focus .pick{ font-family:"Inter"; font-weight:600; font-size:10.5px; text-transform:none; letter-spacing:0;
+  color:#fff; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.5); border-radius:8px;
+  padding:4px 10px; cursor:pointer; }
+.focus .pick:hover{ background:rgba(255,255,255,.3); }
+.focus input{ width:100%; font-size:16px; font-weight:600; color:#fff; margin-top:8px;
+  border-bottom:2px solid rgba(255,255,255,.55); }
+.focus input::placeholder{ color:rgba(255,255,255,.6); }
+.focus input:focus{ background:rgba(255,255,255,.12); border-bottom-color:#fff; }
+.focus .hint{ font-size:10px; color:#cdeee9; margin-top:6px; line-height:1.4; }
+
+/* ============ ALPEN-Spine ============ */
+.alpen{ margin-top:14px; }
+.step{ display:grid; grid-template-columns:16mm 1fr; gap:12px; align-items:start; }
+.step + .step{ margin-top:12px; }
+.glyphwrap{ display:flex; flex-direction:column; align-items:center; padding-top:2px; }
+.glyphwrap .iso{ --s:38px; --c:var(--accent); --side:var(--accent-deep); font-size:20px; }
+.glyphwrap .conn{ width:2px; flex:1; min-height:14px; background:linear-gradient(var(--line-strong),transparent); margin-top:8px; }
+.name-line{ font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:14px; letter-spacing:.2px; }
+.name-line span{ font-weight:400; color:var(--ink-soft); font-size:11px; }
+.do{ font-size:10.5px; color:var(--ink-soft); margin-top:3px; line-height:1.45; }
+
+/* ============ Aufgaben-Tabelle ============ */
+.tablewrap{ margin-top:8px; border:1.5px solid var(--line); border-radius:12px; overflow:hidden; }
+table{ width:100%; border-collapse:collapse; }
+thead th{ font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:9px; text-transform:uppercase;
+  letter-spacing:.5px; color:var(--ink-soft); text-align:left; padding:8px 6px; background:#f5f8f6;
+  border-bottom:1.5px solid var(--line-strong); }
+th.c, td.c{ text-align:center; }
+tbody td{ padding:3px 6px; border-bottom:1px solid var(--line); height:9.4mm; vertical-align:middle; }
+tbody tr:last-child td{ border-bottom:none; }
+tbody tr.done .task-in{ text-decoration:line-through; color:var(--ink-soft); }
+.col-n{ width:7mm; } .col-check{ width:9mm; } .col-min{ width:14mm; }
+.col-tog{ width:16mm; } .col-lev{ width:12mm; } .col-act{ width:28mm; } .col-x{ width:8mm; }
+td.num{ font-family:"Space Grotesk",sans-serif; font-weight:700; color:var(--accent-deep); font-size:12px; text-align:center; }
+.task-in{ width:100%; }
+
+input[type=checkbox]{ width:16px; height:16px; cursor:pointer; accent-color:var(--accent); }
+
+/* Umschalter Wichtig / Dringend */
+.tog{ font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:12px; width:23px; height:23px;
+  border-radius:7px; border:1.6px solid var(--line-strong); background:#fff; color:var(--line-strong);
+  cursor:pointer; transition:all .12s ease; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.tog:hover{ border-color:var(--ink-soft); }
+.tog.on.w{ background:var(--q2); border-color:var(--q2); color:#fff; box-shadow:0 3px 0 var(--q2-side); }
+.tog.on.d{ background:var(--q1); border-color:var(--q1); color:#fff; box-shadow:0 3px 0 var(--q1-side); }
+.tog.lev.on{ background:#f4b23c; border-color:#f4b23c; color:#fff; box-shadow:0 3px 0 #b97d16; }
+
+/* Maßnahme-Badge */
+.act{ display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:600;
+  padding:3px 9px; border-radius:999px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.act .dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+.act.a1{ background:var(--q1-bg); color:var(--q1-side); } .act.a1 .dot{ background:var(--q1); }
+.act.a2{ background:var(--q2-bg); color:var(--q2-side); } .act.a2 .dot{ background:var(--q2); }
+.act.a3{ background:var(--q3-bg); color:var(--q3-side); } .act.a3 .dot{ background:var(--q3); }
+.act.a4{ background:var(--q4-bg); color:var(--q4-side); } .act.a4 .dot{ background:var(--q4); }
+
+.rmv{ background:none; border:none; color:var(--line-strong); font-size:16px; cursor:pointer; line-height:1; padding:2px 6px; border-radius:6px; }
+.rmv:hover{ color:var(--q1); background:var(--q1-bg); }
+.addrow{ font-family:"Inter"; font-weight:600; font-size:11px; color:var(--accent-deep); background:#f5f8f6;
+  border:none; border-top:1.5px solid var(--line); width:100%; padding:7px; cursor:pointer; }
+.addrow:hover{ background:var(--accent-soft); }
+
+/* ============ Pareto / Puffer ============ */
+.puffer{ margin-top:8px; }
+.pbar{ height:26px; border-radius:8px; overflow:hidden; display:flex; border:1.5px solid var(--line);
+  -webkit-print-color-adjust:exact; print-color-adjust:exact; background:#f5f8f6; }
+.pbar .plan{ background:repeating-linear-gradient(45deg,#0f9d8c,#0f9d8c 8px,#13b3a0 8px,#13b3a0 16px);
+  display:flex; align-items:center; justify-content:center; color:#fff; font-family:"Space Grotesk",sans-serif;
+  font-weight:600; font-size:10px; min-width:0; transition:width .25s ease; }
+.pbar .buf{ background:#e7ece9; color:var(--ink-soft); display:flex; align-items:center; justify-content:center;
+  font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:10px; flex:1; }
+.plegend{ display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:6px; font-size:10.5px; color:var(--ink-soft); align-items:center; }
+.chipnum{ font-family:"Space Grotesk",sans-serif; font-weight:700; color:var(--accent-deep);
+  background:var(--accent-soft); border-radius:7px; padding:2px 9px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+/* ============ Eisenhower – isometrisches Board ============ */
+.board-head{ display:flex; justify-content:space-between; align-items:baseline; margin-top:2px; }
+.board-head .ecount{ font-size:10.5px; color:var(--ink-soft); }
+.matrix{ display:grid; grid-template-columns:8mm 1fr 1fr; grid-template-rows:auto auto auto; margin-top:16px; column-gap:14px; row-gap:16px; }
+.axis-top{ grid-column:2 / 4; display:grid; grid-template-columns:1fr 1fr; column-gap:14px; }
+.axis-top div{ font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:10px; letter-spacing:.8px;
+  text-transform:uppercase; color:var(--ink-soft); text-align:center; }
+.axis-top div span{ display:block; font-size:8.5px; font-weight:400; letter-spacing:.3px; color:#a2aaa4; }
+.axis-left{ grid-row:2 / 4; display:grid; grid-template-rows:1fr 1fr; row-gap:16px; }
+.axis-left div{ writing-mode:vertical-rl; transform:rotate(180deg); font-family:"Space Grotesk",sans-serif;
+  font-weight:700; font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--ink-soft);
+  text-align:center; display:flex; align-items:center; justify-content:center; }
+
+.quad{ position:relative; border-radius:14px; min-height:32mm; padding:11px 13px 13px;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+/* 3D-Extrusion nach unten-rechts */
+.quad.d1{ background:var(--q1-bg); box-shadow:7px 7px 0 var(--q1-side), 13px 15px 26px rgba(20,30,26,.20); }
+.quad.d2{ background:var(--q2-bg); box-shadow:6px 6px 0 var(--q2-side), 11px 13px 22px rgba(20,30,26,.17); }
+.quad.d3{ background:var(--q3-bg); box-shadow:5px 5px 0 var(--q3-side), 9px 11px 18px rgba(20,30,26,.15); }
+.quad.d4{ background:var(--q4-bg); box-shadow:3px 3px 0 var(--q4-side), 6px 8px 14px rgba(20,30,26,.12); }
+.quad h4{ font-family:"Space Grotesk",sans-serif; font-size:12px; font-weight:700; letter-spacing:.2px;
+  display:flex; align-items:center; gap:8px; }
+.quad .qnum{ font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:11px; color:#fff;
+  width:19px; height:19px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; flex:none; }
+.quad.d1 h4{ color:var(--q1-side); } .d1 .qnum{ background:var(--q1); }
+.quad.d2 h4{ color:var(--q2-side); } .d2 .qnum{ background:var(--q2); }
+.quad.d3 h4{ color:var(--q3-side); } .d3 .qnum{ background:var(--q3); }
+.quad.d4 h4{ color:var(--q4-side); } .d4 .qnum{ background:var(--q4); }
+.quad .q-sub{ font-size:9px; font-weight:400; margin-top:3px; opacity:.85; }
+.quad .chips{ display:flex; flex-wrap:wrap; gap:5px; margin-top:9px; min-height:14px; }
+.chip{ font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:10.5px; color:#fff;
+  border-radius:7px; padding:3px 9px; display:inline-flex; align-items:center; gap:5px;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.chip.c1{ background:var(--q1); box-shadow:0 3px 0 var(--q1-side); }
+.chip.c2{ background:var(--q2); box-shadow:0 3px 0 var(--q2-side); }
+.chip.c3{ background:var(--q3); box-shadow:0 3px 0 var(--q3-side); }
+.chip.c4{ background:var(--q4); box-shadow:0 3px 0 var(--q4-side); }
+.chip .lv{ font-size:9px; }
+.quad .empty{ font-size:9.5px; color:#a2aaa4; font-style:italic; margin-top:9px; }
+
+/* ============ Reihenfolge heute ============ */
+.order{ margin-top:8px; background:#f5f8f6; border-radius:12px; padding:11px 13px; border:1.5px solid var(--line); }
+.order h5{ font-family:"Space Grotesk",sans-serif; font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.6px; color:var(--accent-deep); margin-bottom:8px; display:flex; align-items:center; gap:7px; }
+.order ol{ list-style:none; display:flex; flex-direction:column; gap:5px; }
+.order li{ display:flex; align-items:center; gap:9px; font-size:11.5px; }
+.order li .oi{ font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:11px; color:#fff;
+  width:20px; height:20px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; flex:none;
+  background:var(--accent); box-shadow:0 3px 0 var(--accent-deep); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.order li .otag{ font-size:9px; font-weight:600; padding:1px 7px; border-radius:999px; margin-left:auto; }
+.order li .om{ color:var(--ink-soft); font-size:10px; }
+.order .oempty{ font-size:10.5px; color:var(--ink-soft); font-style:italic; }
+
+/* ============ Nachkontrolle ============ */
+.review .pr{ font-size:11.5px; margin-top:7px; }
+.review .pr b{ font-weight:600; font-family:"Space Grotesk",sans-serif; }
+
+/* ============ Fuß ============ */
+footer{ margin-top:auto; padding-top:12px; border-top:2.5px solid var(--ink);
+  display:flex; justify-content:space-between; align-items:center; font-size:10px; color:var(--ink-soft); }
+footer .calm{ font-family:"Space Grotesk",sans-serif; font-weight:600; color:var(--accent-deep); letter-spacing:2px; }
+
+/* ============ Druck ============ */
+@media print{
+  html,body{ background:#fff; }
+  .no-print{ display:none !important; }
+  .sheet{ box-shadow:none; margin:0; width:auto; min-height:auto; padding:8mm; border-radius:0; }
+  input[type=text], textarea, .min-in{ border-bottom-color:#9aa39c !important; background:transparent !important; }
+  .quad, .matrix, table tr, .focus, .order, .step, .puffer{ break-inside:avoid; }
+  /* 3D flacher fürs Papier, Farben bleiben */
+  .quad.d1,.quad.d2,.quad.d3,.quad.d4{ box-shadow:none; border:1.5px solid var(--line-strong); }
+  .focus{ box-shadow:none; }
+  .iso{ box-shadow:3px 3px 0 var(--side) !important; }
+  @page{ size:A4; margin:6mm; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar no-print">
+  <p>Am PC ausfüllen: Aufgaben eintippen, <b>W</b> (wichtig) und <b>D</b> (dringend) antippen – das Board unten sortiert sich von selbst und schlägt dir unten eine <b>Reihenfolge</b> vor. Dann drucken. (Wird nicht gespeichert – an einem Stück ausfüllen.)</p>
+  <div class="btns">
+    <button class="btn ghost" onclick="resetAll()">Leeren</button>
+    <button class="btn" onclick="window.print()">Drucken / PDF</button>
+  </div>
+</div>
+
+<div class="sheet">
+
+<header>
+  <div class="brand">
+    <div class="iso">TP</div>
+    <div class="title">
+      <h1>Mein Tagesplan</h1>
+      <div class="sub">ALPEN · 80/20 · Eisenhower</div>
+    </div>
+  </div>
+  <div class="headright">
+    <div class="ring no-print" title="Erledigt">
+      <svg width="52" height="52">
+        <circle cx="26" cy="26" r="21" fill="none" stroke="#e4ece9" stroke-width="7"></circle>
+        <circle id="ringFg" cx="26" cy="26" r="21" fill="none" stroke="#0f9d8c" stroke-width="7"
+                stroke-linecap="round" stroke-dasharray="131.9" stroke-dashoffset="131.9"></circle>
+      </svg>
+      <div class="rtxt" id="ringTxt">0/0</div>
+    </div>
+    <div class="meta">
+      <div class="name">Patrik Kadar</div>
+      <div>Datum: <input type="text"></div>
+      <div>Wochentag: <input type="text"></div>
+    </div>
+  </div>
+</header>
+
+<div class="focus">
+  <div class="lab">
+    <span class="l">🐸 Der Frosch: mein 1 wichtigstes heute</span>
+    <button class="pick no-print" onclick="pickFocus()">↑ aus „Sofort" übernehmen</button>
+  </div>
+  <input type="text" id="focusInput" placeholder="Wenn ich heute nur EINE Sache schaffe – diese …">
+  <div class="hint">„Eat the frog": erledige diese Aufgabe als Erstes am Tag, bevor irgendwas anderes dazwischenkommt.</div>
+</div>
+
+<div class="alpen">
+
+  <!-- A -->
+  <div class="step">
+    <div class="glyphwrap"><div class="iso">A</div><div class="conn"></div></div>
+    <div>
+      <div class="name-line">Aufgaben aufschreiben <span>— alles raus aus dem Kopf</span></div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="c col-n">#</th>
+              <th class="c col-check">Erl.</th>
+              <th>Aufgabe</th>
+              <th class="c col-min">Min</th>
+              <th class="c col-tog">W · D</th>
+              <th class="c col-lev">Hebel</th>
+              <th class="col-act">→ Maßnahme</th>
+              <th class="c col-x no-print"></th>
+            </tr>
+          </thead>
+          <tbody id="taskBody"></tbody>
+        </table>
+        <button class="addrow no-print" onclick="addRow(true)">+ Zeile hinzufügen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- L -->
+  <div class="step">
+    <div class="glyphwrap"><div class="iso">L</div><div class="conn"></div></div>
+    <div>
+      <div class="name-line">Länge schätzen <span>— wie lange dauert das wohl?</span></div>
+      <div class="do">Trag bei jeder Aufgabe die geschätzten Minuten ein. Lieber großzügig schätzen.</div>
+    </div>
+  </div>
+
+  <!-- P -->
+  <div class="step">
+    <div class="glyphwrap"><div class="iso">P</div><div class="conn"></div></div>
+    <div>
+      <div class="name-line">Pufferzeit einplanen <span>— nur ~60 % deiner Zeit fest verplanen</span></div>
+      <div class="puffer">
+        <div class="pbar">
+          <div class="plan" id="pbarPlan" style="width:60%">verplant</div>
+          <div class="buf" id="pbarBuf">Puffer</div>
+        </div>
+        <div class="plegend">
+          <span>Summe Aufgaben: <span class="chipnum" id="sumMin">0</span> Min</span>
+          <span>Puffer (40 %): <span class="chipnum" id="bufMin">0</span> Min</span>
+          <span style="color:var(--ink-soft)">→ Rest = Pausen &amp; Unvorhergesehenes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- E -->
+  <div class="step">
+    <div class="glyphwrap"><div class="iso">E</div><div class="conn"></div></div>
+    <div>
+      <div class="name-line">Entscheiden — Eisenhower + 80/20 <span>— was zuerst?</span></div>
+      <div class="board-head">
+        <div class="do">Jede Aufgabe liegt automatisch auf einem Feld. Ohne W/D landet sie in ④ „Weglassen".</div>
+        <div class="ecount" id="eCount">0 Aufgaben</div>
+      </div>
+
+      <div class="matrix">
+        <div></div>
+        <div class="axis-top">
+          <div>Dringend<span>eilt, hat Frist</span></div>
+          <div>Nicht dringend<span>hat Zeit</span></div>
+        </div>
+        <div class="axis-left">
+          <div>Wichtig</div>
+          <div>Nicht wichtig</div>
+        </div>
+
+        <div class="quad d1" id="q1box">
+          <h4><span class="qnum">1</span> Sofort erledigen</h4>
+          <div class="q-sub">wichtig + dringend — selbst, heute</div>
+          <div class="chips" id="q1"></div>
+        </div>
+        <div class="quad d2" id="q2box">
+          <h4><span class="qnum">2</span> Einplanen / Termin</h4>
+          <div class="q-sub">wichtig, nicht dringend — fest terminieren</div>
+          <div class="chips" id="q2"></div>
+        </div>
+        <div class="quad d3" id="q3box">
+          <h4><span class="qnum">3</span> Delegieren / abgeben</h4>
+          <div class="q-sub">dringend, nicht wichtig — Hilfe holen</div>
+          <div class="chips" id="q3"></div>
+        </div>
+        <div class="quad d4" id="q4box">
+          <h4><span class="qnum">4</span> Weglassen / später</h4>
+          <div class="q-sub">weder noch — streichen oder aufschieben</div>
+          <div class="chips" id="q4"></div>
+        </div>
+      </div>
+
+      <div class="order">
+        <h5>⚡ Meine Reihenfolge heute <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-soft);font-size:9.5px;">(automatisch: Sofort → Einplanen → Delegieren, Hebel &amp; schnelle zuerst)</span></h5>
+        <ol id="orderList"></ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- N -->
+  <div class="step review">
+    <div class="glyphwrap"><div class="iso">N</div></div>
+    <div>
+      <div class="name-line">Nachkontrolle <span>— abends kurz zurückschauen</span></div>
+      <div class="pr"><b>Was lief heute gut?</b><textarea rows="1"></textarea></div>
+      <div class="pr"><b>Was nehme ich morgen mit?</b><textarea rows="1"></textarea></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>Ein Schritt nach dem anderen. Pausen sind erlaubt.</span>
+  <span class="calm">A · L · P · E · N</span>
+</footer>
+
+</div>
+
+<script>
+const QUAD = {
+  "11": { q:"q1", cls:"c1", act:"a1", label:"Sofort" },
+  "10": { q:"q2", cls:"c2", act:"a2", label:"Einplanen" },
+  "01": { q:"q3", cls:"c3", act:"a3", label:"Delegieren" },
+  "00": { q:"q4", cls:"c4", act:"a4", label:"Weglassen" }
+};
+const EMPTY = { q1:"leer", q2:"leer", q3:"leer", q4:"hier landet, was du nicht markierst" };
+
+let tasks = [];
+let nextId = 1;
+const body = document.getElementById('taskBody');
+
+function keyOf(t){ return (t.w?"1":"0") + (t.d?"1":"0"); }
+
+function addRow(focusNew){
+  const id = nextId++;
+  const t = { id, text:"", min:"", w:false, d:false, lever:false, done:false, els:{} };
+  tasks.push(t);
+
+  const tr = document.createElement('tr');
+  tr.dataset.id = id;
+  tr.innerHTML = `
+    <td class="num"></td>
+    <td class="c"><input type="checkbox" class="cb-done" title="erledigt"></td>
+    <td><input type="text" class="task-in" placeholder="Aufgabe …"></td>
+    <td class="c"><input type="text" class="min-in" inputmode="numeric" placeholder="–"></td>
+    <td class="c" style="white-space:nowrap">
+      <button class="tog w" title="wichtig">W</button>
+      <button class="tog d" title="dringend">D</button>
+    </td>
+    <td class="c"><button class="tog lev" title="80/20-Hebel: bringt überdurchschnittlich viel">⚡</button></td>
+    <td><span class="act a4" data-act><span class="dot"></span>Weglassen</span></td>
+    <td class="c no-print"><button class="rmv" title="Zeile löschen">×</button></td>`;
+  body.appendChild(tr);
+
+  const textEl = tr.querySelector('.task-in');
+  const minEl  = tr.querySelector('.min-in');
+  const doneEl = tr.querySelector('.cb-done');
+  const wBtn   = tr.querySelector('.tog.w');
+  const dBtn   = tr.querySelector('.tog.d');
+  const levBtn = tr.querySelector('.tog.lev');
+  t.els = { tr, wBtn, dBtn, levBtn };
+
+  textEl.addEventListener('input', e=>{ t.text=e.target.value; renderAll(); });
+  minEl .addEventListener('input', e=>{ t.min=e.target.value; renderAll(); });
+  doneEl.addEventListener('change', e=>{ t.done=e.target.checked; tr.classList.toggle('done',t.done); renderAll(); });
+  wBtn  .addEventListener('click', ()=>{ t.w=!t.w; renderAll(); });
+  dBtn  .addEventListener('click', ()=>{ t.d=!t.d; renderAll(); });
+  levBtn.addEventListener('click', ()=>{ t.lever=!t.lever; renderAll(); });
+  tr.querySelector('.rmv').addEventListener('click', ()=>{ removeRow(id); });
+
+  renderAll();
+  if(focusNew) textEl.focus();
+}
+
+function removeRow(id){
+  const t = tasks.find(x=>x.id===id);
+  if(t) t.els.tr.remove();
+  tasks = tasks.filter(x=>x.id!==id);
+  renderAll();
+}
+
+function renderRowState(t, num){
+  t.els.tr.querySelector('.num').textContent = num;
+  t.els.wBtn.classList.toggle('on', t.w);
+  t.els.dBtn.classList.toggle('on', t.d);
+  t.els.levBtn.classList.toggle('on', t.lever);
+  const info = QUAD[keyOf(t)];
+  const act = t.els.tr.querySelector('[data-act]');
+  act.className = "act " + info.act;
+  act.innerHTML = `<span class="dot"></span>${info.label}${t.lever?' ⚡':''}`;
+}
+
+function renderMatrix(active){
+  ['q1','q2','q3','q4'].forEach(q=> document.getElementById(q).innerHTML="");
+  active.forEach(t=>{
+    const info = QUAD[keyOf(t)];
+    const chip = document.createElement('span');
+    chip.className = "chip " + info.cls;
+    chip.innerHTML = `${t.num} ${shorten(t.text)}${t.lever?'<span class="lv">⚡</span>':''}`;
+    document.getElementById(info.q).appendChild(chip);
+  });
+  ['q1','q2','q3','q4'].forEach(q=>{
+    const box = document.getElementById(q);
+    if(!box.children.length) box.innerHTML = `<span class="empty">${EMPTY[q]}</span>`;
+  });
+  document.getElementById('eCount').textContent =
+    active.length + (active.length===1 ? " Aufgabe" : " Aufgaben");
+}
+
+function renderOrder(active){
+  // Reihenfolge: Q1 → Q2 → Q3 (Q4 = weglassen, nicht in der To-do-Reihenfolge).
+  // Innerhalb eines Quadranten: Hebel (⚡) zuerst, dann kürzere Dauer (Quick Wins).
+  const rank = { "11":0, "10":1, "01":2, "00":9 };
+  const doable = active.filter(t=> !t.done && keyOf(t)!=="00");
+  doable.sort((a,b)=>{
+    const ra=rank[keyOf(a)], rb=rank[keyOf(b)];
+    if(ra!==rb) return ra-rb;
+    if(a.lever!==b.lever) return a.lever?-1:1;
+    const ma=parseInt(a.min,10)||9999, mb=parseInt(b.min,10)||9999;
+    return ma-mb;
+  });
+  const ol = document.getElementById('orderList');
+  ol.innerHTML = "";
+  if(!doable.length){
+    ol.innerHTML = `<div class="oempty">Noch nichts markiert. Tippe bei deinen Aufgaben <b>W</b> und/oder <b>D</b> an – hier erscheint dann deine Reihenfolge.</div>`;
+    return;
+  }
+  const tagCol = { "11":"var(--q1)", "10":"var(--q2)", "01":"var(--q3)" };
+  const tagBg  = { "11":"var(--q1-bg)", "10":"var(--q2-bg)", "01":"var(--q3-bg)" };
+  doable.forEach((t,i)=>{
+    const info = QUAD[keyOf(t)];
+    const li = document.createElement('li');
+    const mins = (parseInt(t.min,10)||0);
+    li.innerHTML = `
+      <span class="oi">${i+1}</span>
+      <span>${t.lever?'⚡ ':''}${escapeHtml(t.text) || '<span style="color:#a2aaa4">(ohne Titel)</span>'}</span>
+      ${mins?`<span class="om">${mins} Min</span>`:''}
+      <span class="otag" style="color:${tagCol[keyOf(t)]};background:${tagBg[keyOf(t)]}">${info.label}</span>`;
+    ol.appendChild(li);
+  });
+}
+
+function renderBuffer(active){
+  const sum = active.reduce((a,t)=> a + (parseInt(t.min,10)||0), 0);
+  const buf = Math.round(sum*0.4);
+  document.getElementById('sumMin').textContent = sum;
+  document.getElementById('bufMin').textContent = buf;
+  const plan = document.getElementById('pbarPlan');
+  const bufEl = document.getElementById('pbarBuf');
+  plan.style.width = "60%";
+  plan.textContent = sum ? `verplant · ${sum} Min` : 'verplant (60 %)';
+  bufEl.textContent = buf ? `Puffer · ${buf} Min` : 'Puffer (40 %)';
+}
+
+function renderRing(){
+  const total = tasks.filter(t=> t.text.trim()!=="").length;
+  const done  = tasks.filter(t=> t.text.trim()!=="" && t.done).length;
+  document.getElementById('ringTxt').textContent = done + "/" + total;
+  const C = 2*Math.PI*21;
+  const frac = total ? done/total : 0;
+  document.getElementById('ringFg').style.strokeDashoffset = C*(1-frac);
+}
+
+function renderAll(){
+  // Aktive Aufgaben = mit Text. Nummerierung fortlaufend über aktive.
+  let num = 0;
+  const active = [];
+  tasks.forEach(t=>{
+    const has = t.text.trim()!=="";
+    if(has){ num++; t.num = num; active.push(t); }
+    renderRowState(t, has ? num : "");
+  });
+  renderMatrix(active);
+  renderOrder(active);
+  renderBuffer(active);
+  renderRing();
+}
+
+function shorten(s){ s=(s||"").trim(); s=escapeHtml(s); return s.length>18 ? s.slice(0,17)+"…" : s; }
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function pickFocus(){
+  const first = tasks.find(t=> t.w && t.d && t.text.trim()!=="")
+             || tasks.find(t=> t.w && t.text.trim()!=="");
+  if(first){ document.getElementById('focusInput').value = first.text.trim(); }
+  else document.getElementById('focusInput').focus();
+}
+
+function resetAll(){
+  if(!confirm("Alles leeren und neu starten?")) return;
+  body.innerHTML = ""; tasks = []; nextId = 1;
+  document.getElementById('focusInput').value = "";
+  document.querySelectorAll('.meta input, .review textarea').forEach(el=> el.value="");
+  for(let i=0;i<6;i++) addRow(false);
+}
+
+// Startzeilen
+for(let i=0;i<6;i++) addRow(false);
+</script>
+</body>
+</html>
